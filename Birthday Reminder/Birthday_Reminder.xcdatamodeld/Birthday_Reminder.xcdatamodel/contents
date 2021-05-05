@@ -3,7 +3,7 @@
     <entity name="Person" representedClassName="Person" syncable="YES" codeGenerationType="category">
         <attribute name="dateOfBirth" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="daysTillBirth" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="image" optional="YES" attributeType="String" customClassName="UIImage"/>
+        <attribute name="imageData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES" customClassName="UIImage"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="tag" optional="YES" attributeType="String"/>
     </entity>

@@ -8,8 +8,15 @@
 import UIKit
 import Photos
 import CoreData
+
+protocol PopUpViewControllerDelegate:class{
+    func reloadData()
+}
+
 class PopUpViewController: UIViewController {
 
+    weak var popUpDelegate: PopUpViewControllerDelegate? = nil
+    
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     @IBOutlet weak var popUpView: UIView!
@@ -17,7 +24,7 @@ class PopUpViewController: UIViewController {
     @IBOutlet weak var xButton: UIButton!
     @IBOutlet weak var pictureView: UIImageView!
     @IBOutlet weak var nameTextField: UITextField!
-    @IBOutlet weak var dateOfBirth: UIDatePicker!
+    @IBOutlet weak var dateOfBirthPicker: UIDatePicker!
     @IBOutlet weak var tag1: UIButton!
     @IBOutlet weak var tag2: UIButton!
     @IBOutlet weak var tag3: UIButton!
@@ -56,8 +63,8 @@ class PopUpViewController: UIViewController {
         let singleTap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(addPhoto))
         singleTap.numberOfTapsRequired = 1
         pictureView.addGestureRecognizer(singleTap)
-
-       
+    
+        print("\(String(describing: popUpDelegate))")
     }
     
     fileprivate func presentPhotoPickerController() {
@@ -137,51 +144,39 @@ class PopUpViewController: UIViewController {
 
     @IBAction func checkButtonTapped(_ sender: Any) {
         checkButton.setBackgroundImage(UIImage(systemName: "checkmark.circle.fill"), for: .normal)
+        let dbHelper = DataBaseHelper()
         // save
-        guard !nameTextField.text!.isEmpty else {
+        if let name = nameTextField.text ,let imageData = pictureView.image{
             // TODO: show an alert
+            // calculate days till birth
+            let dateOfBirth = dateOfBirthPicker.date
+            //    let formatter = DateFormatter()
+           //     formatter.dateStyle = .medium
+          
+           
+            guard !name.isEmpty else {
+                return
+            }
+            
+            dbHelper.addPerson(name, dateOfBirth, imageData, lastSelectedTag.rawValue)
+           
+            do{
+               try context.save()
+              
+
+            }
+            catch{
+                // TODO: alert
+            }
+           popUpDelegate?.reloadData()
+           dismiss(animated: true, completion: nil)
+            
+            
+           
             return
         }
-        let name = nameTextField.text!
-        let person = Person(context: context)
-        person.name = name
+
     
-//        let formatter = DateFormatter()
-//        formatter.dateStyle = .medium
-        
-        person.dateOfBirth = dateOfBirth.date
-        
-        
-        
-        // TODO: calculate days left and extract it to a method
-       // print(person.dateOfBirth)
-        
-        person.tag = lastSelectedTag.rawValue
-        
-       // TODO: save the image
-//        guard let data = pictureView.image?.pngData() else {
-//            do{
-//                try context.save()
-//            }
-//            catch{
-//                // TODO: alert
-//            }
-//            return
-//        }
-//        
-//        DataBaseHelper.shareInstance.saveImage(data: data)
-//            
-        do{
-           try context.save()
-        }
-        catch{
-            // TODO: alert
-        }
-        
-        
-       dismiss(animated: true, completion: nil)
-      
-        print(person.dateOfBirth as Any)
     }
     
     
@@ -193,41 +188,6 @@ class PopUpViewController: UIViewController {
     }
     
    
-    
-//    @objc func tagTapped(selectedTag: String){
-//        
-//        switch lastSelectedTag {
-//        case .tag1:
-//            tag1.setBackgroundImage(UIImage(systemName: "square.fill"), for: .normal)
-//        case .tag2:
-//            tag2.setBackgroundImage(UIImage(systemName: "square.fill"), for: .normal)
-//        case .tag3:
-//            tag3.setBackgroundImage(UIImage(systemName: "square.fill"), for: .normal)
-//        case .tag4:
-//            tag4.setBackgroundImage(UIImage(systemName: "square.fill"), for: .normal)
-//        }
-//        
-//        switch selectedTag{
-//        case "tag1":
-//            tag1.setBackgroundImage(UIImage(systemName: "checkmark.seal.fill"), for: .normal)
-//            lastSelectedTag = .tag1
-//        case "tag2":
-//            tag2.setBackgroundImage(UIImage(systemName: "checkmark.seal.fill"), for: .normal)
-//            lastSelectedTag = .tag2
-//        case "tag3":
-//            tag3.setBackgroundImage(UIImage(systemName: "checkmark.seal.fill"), for: .normal)
-//            lastSelectedTag = .tag3
-//        case "tag4":
-//            tag4.setBackgroundImage(UIImage(systemName: "checkmark.seal.fill"), for: .normal)
-//            lastSelectedTag = .tag4
-//        default:
-//            return
-//        }
-//        
-//        
-//    }
-    
-
     @IBAction func tag1Tapped(_ sender: Any) {
 
 
@@ -237,7 +197,7 @@ class PopUpViewController: UIViewController {
         case .tag2:
             tag2.setBackgroundImage(UIImage(systemName: "square.fill"), for: .normal)
         case .tag3:
-            return
+            tag3.setBackgroundImage(UIImage(systemName: "square.fill"), for: .normal)
         case .tag4:
             tag4.setBackgroundImage(UIImage(systemName: "square.fill"), for: .normal)
         }
@@ -304,6 +264,7 @@ class PopUpViewController: UIViewController {
     
 
 }
+
 extension PopUpViewController:UIImagePickerControllerDelegate,UINavigationControllerDelegate{
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
